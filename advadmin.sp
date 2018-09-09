@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #include <sourcemod>
 #include <sdktools>
@@ -6,12 +7,12 @@
 #include <cstrike>
 #include <geoip>
 
-public Plugin: myinfo =
+public Plugin myinfo =
 {
 	name = "[CSGO] Advanced Admin",
-	author = "PeEzZ. edit-Cruze",
+	author = "PeEzZ.[edit Cruze]",
 	description = "Advanced commands for admins.",
-	version = "1.7.0",
+	version = "2.0",
 	url = "https://forums.alliedmods.net/showthread.php?t=285493"
 };
 
@@ -27,15 +28,15 @@ public Plugin: myinfo =
 #define SOUND_CHICKEN "ambient/creatures/chicken_panic_03.wav" //Chicken spawn sound, leave blank to disable
 #define SOUND_BURY "physics/concrete/boulder_impact_hard4.wav" //Bury sound, leave blank to disable
 
-new Handle: CVAR_ADMINS = INVALID_HANDLE,
-	Handle: CVAR_ANNOUNCE = INVALID_HANDLE,
-	Handle: CVAR_SILENTADMINTEAMJOIN = INVALID_HANDLE,
-	Handle: CVAR_INVALID = INVALID_HANDLE,
-	Handle: CVAR_LOG = INVALID_HANDLE;
+Handle CVAR_ADMINS = INVALID_HANDLE;
+Handle CVAR_ANNOUNCE = INVALID_HANDLE;
+Handle CVAR_SILENTADMINTEAMJOIN = INVALID_HANDLE;
+Handle CVAR_INVALID = INVALID_HANDLE;
+Handle CVAR_LOG = INVALID_HANDLE;
 
-new Float: SaveVec[MAXPLAYERS + 1][2][3];
+float SaveVec[MAXPLAYERS + 1][2][3];
 
-new String: WeaponsList[][] = //VALID WEAPON NAMES HERE
+char WeaponsList[][] = //VALID WEAPON NAMES HERE
 {
 	"c4", "knife", "knifegg", "taser", "healthshot", //misc
 	"decoy", "flashbang", "hegrenade", "molotov", "incgrenade", "smokegrenade", "tagrenade", //grenades
@@ -45,20 +46,20 @@ new String: WeaponsList[][] = //VALID WEAPON NAMES HERE
 	"ak47", "aug", "famas", "sg556", "galilar", "m4a1", "m4a1_silencer", //rifles
 	"awp", "ssg08", "scar20", "g3sg1" //snipers
 };
-new String: ItemsList[][] = //VALID ITEM NAMES HERE, HEAVYASSAULTSUIT ONLY WORKS WHEN ITS ENABLED (mp_max_armor 3)
+char ItemsList[][] = //VALID ITEM NAMES HERE, HEAVYASSAULTSUIT ONLY WORKS WHEN ITS ENABLED (mp_max_armor 3)
 {
 	"defuser", "cutters", //defuser and rescue kit
 	"kevlar", "assaultsuit", "heavyassaultsuit", //armors
 	"nvgs" //nightvision
 };
 
-public OnPluginStart()
+public void OnPluginStart()
 {
-	CVAR_ADMINS			= CreateConVar("sm_advadmin_admins",		"2",						"Settings of !admins command, 0 - disable, 1 - show fake message, 2 - show online admins", _, true, 0.0, true, 2.0);
-	CVAR_ANNOUNCE		= CreateConVar("sm_advadmin_announce",		"2",						"Join announce, 0 - disable, 1 - simple announce, 2 - announce with country name, 3 = no admin annouce", _, true, 0.0, true, 3.0);
+	CVAR_ADMINS					= CreateConVar("sm_advadmin_admins",		"2",						"Settings of !admins command, 0 - disable, 1 - show fake message, 2 - show online admins", _, true, 0.0, true, 2.0);
+	CVAR_ANNOUNCE					=	CreateConVar("sm_advadmin_announce",		"2",						"Join announce, 0 - disable, 1 - simple announce, 2 - announce with country name, 3 = no admin annouce", _, true, 0.0, true, 3.0);
 	CVAR_SILENTADMINTEAMJOIN		=	CreateConVar("sm_advadmin_noteamjoinmsg",	"1",			"No Team join message for admin, 0 = disable, 1 = enable", _, true, 0.0, true, 1.0);
-	CVAR_INVALID		= CreateConVar("sm_advadmin_invalid",		"1",							"Invalid given item will show for all players just for fun, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
-	CVAR_LOG			= CreateConVar("sm_advadmin_log",			"1",							"Enable logging for plugin, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
+	CVAR_INVALID					= CreateConVar("sm_advadmin_invalid",		"1",							"Invalid given item will show for all players just for fun, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
+	CVAR_LOG						= CreateConVar("sm_advadmin_log",			"1",							"Enable logging for plugin, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
 	
 	//-----//
 	RegAdminCmd("sm_extend",		CMD_Extend,			ADMFLAG_CHANGEMAP,	"Extending the map");
@@ -124,7 +125,7 @@ public Action Event_PlayerTeam(Event event, const char[] name, bool dontBroadcas
 		}
 	}
 }
-public OnMapStart()
+public void OnMapStart()
 {
 	if(!StrEqual(SOUND_RESPAWN, "", false))
 	{
@@ -145,13 +146,12 @@ public OnMapStart()
 }
 
 //-----CLIENT_AUTHORIZED-----//
-public OnClientAuthorized(client, const String: auth[])
+public void OnClientAuthorized(int client, const char[] auth)
 {
-	new announce = GetConVarInt(CVAR_ANNOUNCE);
+	int announce = GetConVarInt(CVAR_ANNOUNCE);
 	if(announce > 0)
 	{
-		new String: IP[64],
-			String: country[64];
+		char IP[64], country[64];
 		
 		if((announce) == 1)
 		{
@@ -174,7 +174,7 @@ public OnClientAuthorized(client, const String: auth[])
 
 //----------------------------//
 //=====NON-ADMIN_COMMAND=====//
-public Action: CMD_Admins(client, args) //Showing all online admins for you. !!IF YOU ARE ADMIN, YOU ALWAYS GET THE TRUE, CURRENTLY ONLINE ADMINS! NO MATTER IF THE COMMAND IS DISABLED OR SET TO FAKE ADMINS!!
+public Action CMD_Admins(int client, int args) //Showing all online admins for you. !!IF YOU ARE ADMIN, YOU ALWAYS GET THE TRUE, CURRENTLY ONLINE ADMINS! NO MATTER IF THE COMMAND IS DISABLED OR SET TO FAKE ADMINS!!
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -183,7 +183,7 @@ public Action: CMD_Admins(client, args) //Showing all online admins for you. !!I
 	
 	if(!(GetUserFlagBits(client) & ADMFLAG_GENERIC))
 	{
-		new value = GetConVarInt(CVAR_ADMINS);
+		int value = GetConVarInt(CVAR_ADMINS);
 		if(value == 0)
 		{
 			ReplyToCommand(client, "%t", "CMD_Disabled");
@@ -196,14 +196,13 @@ public Action: CMD_Admins(client, args) //Showing all online admins for you. !!I
 		}
 	}
 	
-	new String: buffer[128],
-		String: current[64];
+	char buffer[128], current[64];
 	
-	for(new i = 1; i <= MaxClients; i++)
+	for(int i = 1; i <= MaxClients; i++)
 	{
 		if(IsClientInGame(i))
 		{
-			new flags = GetUserFlagBits(i);
+			char flags = GetUserFlagBits(i);
 			if(flags & ADMFLAG_GENERIC)
 			{			
 				Format(current, sizeof(current), "%s%N", (flags & ADMFLAG_ROOT) ? ROOT_PREFIX : ADMIN_PREFIX, i);
@@ -232,7 +231,7 @@ public Action: CMD_Admins(client, args) //Showing all online admins for you. !!I
 
 //------------------------//
 //=====ADMIN_COMMANDS=====//
-public Action: CMD_Extend(client, args)
+public Action CMD_Extend(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -245,25 +244,25 @@ public Action: CMD_Extend(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: buffer[6];
+	char buffer[6];
 	GetCmdArg(1, buffer, sizeof(buffer));
 	
-	new value = StringToInt(buffer);
+	int value = StringToInt(buffer);
 	ExtendMapTimeLimit(value * 60);
 	
 	ShowActivity2(client, CMD_PREFIX, "%t", "CMD_Extend", value);
 	LogActionEx(client, "%t", "CMD_Extend", value);
 	return Plugin_Handled;
 }
-public Action: CMD_ClearMap(client, args)
+public Action CMD_ClearMap(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
 		return Plugin_Handled;
 	}
 	
-	new String: buffer[64];
-	for(new entity = MaxClients; entity < GetMaxEntities(); entity++)
+	char buffer[64];
+	for(char entity = MaxClients; entity < GetMaxEntities(); entity++)
 	{
 		if(IsValidEntity(entity))
 		{
@@ -279,12 +278,12 @@ public Action: CMD_ClearMap(client, args)
 	LogActionEx(client, "%t", "CMD_ClearMap");
 	return Plugin_Handled;
 }
-public Action: CMD_RestartGame(client, args)
+public Action CMD_RestartGame(int client, int args)
 {
-	new Float: time;
+	float time;
 	if(args)
 	{
-		new String: buffer[2];
+		char buffer[2];
 		GetCmdArg(1, buffer, sizeof(buffer));
 		time = StringToFloat(buffer);
 	}
@@ -302,12 +301,12 @@ public Action: CMD_RestartGame(client, args)
 	LogActionEx(client, "%t", "CMD_RestartGame");
 	return Plugin_Handled;
 }
-public Action: CMD_RestartRound(client, args)
+public Action CMD_RestartRound(int client, int args)
 {
-	new Float: time;
+	float time;
 	if(args)
 	{
-		new String: buffer[2];
+		char buffer[2];
 		GetCmdArg(1, buffer, sizeof(buffer));
 		time = StringToFloat(buffer);
 	}
@@ -317,15 +316,15 @@ public Action: CMD_RestartRound(client, args)
 	LogActionEx(client, "%t", "CMD_RestartRound");
 	return Plugin_Handled;
 }
-public Action: CMD_Equipments(client, args)
+public Action CMD_Equipments(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
 		return Plugin_Handled;
 	}
 	
-	new String: buffer[512];
-	for(new i = 0; i < sizeof(WeaponsList); i++)
+	char buffer[512];
+	for(int i = 0; i < sizeof(WeaponsList); i++)
 	{
 		if(StrEqual(buffer, "", false))
 		{
@@ -340,7 +339,7 @@ public Action: CMD_Equipments(client, args)
 	
 	buffer = "";
 	
-	for(new i = 0; i < sizeof(ItemsList); i++)
+	for(int i = 0; i < sizeof(ItemsList); i++)
 	{
 		if(StrEqual(buffer, "", false))
 		{
@@ -355,28 +354,25 @@ public Action: CMD_Equipments(client, args)
 	ReplyToCommand(client, "%t", "CMD_Equipments_Printed");
 	return Plugin_Handled;
 }
-public Action: CMD_PlaySound(client, args)
+public Action CMD_PlaySound(int client, int args)
 {
 	if(args < 2)
 	{
 		ReplyToCommand(client, "%t", "CMD_PlaySound_Usage");
 		return Plugin_Handled;
 	}
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
+	GetCmdArg(1, buffer, sizeof(buffer));
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[512],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
-	
-	GetCmdArg(1, buffer, sizeof(buffer));	
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
 	}
 	
-	new value[3];
+	int value[3];
 	GetCmdArg(3, buffer, sizeof(buffer));
 	value[0] = StringToInt(buffer);
 	if((value[0] < 50) || (value[0] > 250))
@@ -398,7 +394,7 @@ public Action: CMD_PlaySound(client, args)
 		value[2] = 1;
 	}
 	
-	new String: file[512];
+	char file[512];
 	GetCmdArg(2, buffer, sizeof(buffer));
 	Format(file, sizeof(file), "sound/%s", buffer);
 	if(!FileExists(file))
@@ -409,11 +405,11 @@ public Action: CMD_PlaySound(client, args)
 	
 	PrecacheSound(buffer, true);
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		if(IsClientInGame(target_list[i]))
 		{
-			for(new n = 0; n < value[2]; n++)
+			for(int n = 0; n < value[2]; n++)
 			{
 				EmitSoundToClient(target_list[i], buffer, _, _, _, _, value[1] * 0.01, value[0]);
 			}
@@ -432,7 +428,7 @@ public Action: CMD_PlaySound(client, args)
 }
 
 //=========CLIENT=========//
-public Action: CMD_Teleport(client, args)
+public Action CMD_Teleport(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -445,20 +441,18 @@ public Action: CMD_Teleport(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
-		
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	GetCmdArg(1, buffer, sizeof(buffer));
+	
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
 	}
 	
-	new Float: vec[2][3];
+	float vec[2][3];
 	GetCmdArg(2, buffer, sizeof(buffer));
 	if(!StrEqual(buffer, "", false))
 	{
@@ -467,7 +461,7 @@ public Action: CMD_Teleport(client, args)
 			GetClientEyePosition(client, vec[0]);
 			GetClientEyeAngles(client, vec[1]);
 			
-			new Handle: trace = TR_TraceRayFilterEx(vec[0], vec[1], MASK_SOLID, RayType_Infinite, Filter_ExcludePlayers);
+			Handle trace = TR_TraceRayFilterEx(vec[0], vec[1], MASK_SOLID, RayType_Infinite, Filter_ExcludePlayers);
 			if(!TR_DidHit(trace))
 			{
 				return Plugin_Handled;
@@ -490,7 +484,7 @@ public Action: CMD_Teleport(client, args)
 		}
 		else
 		{
-			new target = FindTarget(client, buffer, false, false);
+			char target = FindTarget(client, buffer, false, false);
 			if(!IsClientValid(target) || !IsClientInGame(target))
 			{
 				return Plugin_Handled;
@@ -538,11 +532,11 @@ public Action: CMD_Teleport(client, args)
 	
 	vec[0][2] = vec[0][2] + 2.0;
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		if(IsClientInGame(target_list[i]))
 		{
-			TeleportEntity(target_list[i], vec[0], vec[1], Float: {0.0, 0.0, 0.0});
+			TeleportEntity(target_list[i], vec[0], vec[1], view_as<float>({0.0, 0.0, 0.0}));
 		}
 	}
 	
@@ -552,7 +546,7 @@ public Action: CMD_Teleport(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_SaveVec(client, args)
+public Action CMD_SaveVec(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -566,7 +560,7 @@ public Action: CMD_SaveVec(client, args)
 }
 
 //==========//
-public Action: CMD_Team(client, args)
+public Action CMD_Team(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -579,11 +573,9 @@ public Action: CMD_Team(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -592,7 +584,7 @@ public Action: CMD_Team(client, args)
 		return Plugin_Handled;
 	}
 	
-	new team;
+	int team;
 	GetCmdArg(2, buffer, sizeof(buffer));
 	if(StrEqual(buffer, "spectator", false) || StrEqual(buffer, "spec", false) || StrEqual(buffer, "1", false))
 	{
@@ -643,13 +635,13 @@ public Action: CMD_Team(client, args)
 	}
 	
 	GetCmdArg(3, buffer, sizeof(buffer));
-	new value = StringToInt(buffer);
+	int value = StringToInt(buffer);
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		if(IsClientInGame(target_list[i]))
 		{
-			if(!value)
+			if(value == 1)
 			{
 				if(team != 1)
 				{
@@ -667,12 +659,18 @@ public Action: CMD_Team(client, args)
 			else
 			{
 				SetEntProp(target_list[i], Prop_Data, "m_iPendingTeamNum", team);
+				int frags = GetClientFrags(target_list[i]) +1;
+				int deaths = GetClientDeaths(target_list[i])-1;
+				int score = CS_GetClientContributionScore(target_list[i])+2;
+				SetEntProp(target_list[i], Prop_Data, "m_iFrags", frags);
+				SetEntProp(target_list[i], Prop_Data, "m_iDeaths", deaths);
+				CS_SetClientContributionScore(target_list[i], score);
 			}
 		}
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_Swap(client, args)
+public Action CMD_Swap(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -685,11 +683,10 @@ public Action: CMD_Swap(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
+		
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if(StrEqual(buffer, "@spec", false) || StrEqual(buffer, "@spectator", false))
@@ -705,17 +702,16 @@ public Action: CMD_Swap(client, args)
 	}
 	
 	GetCmdArg(2, buffer, sizeof(buffer));
-	new value = StringToInt(buffer),
-		team;
+	int value = StringToInt(buffer), team;
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		if(IsClientInGame(target_list[i]))
 		{
 			team = GetClientTeam(target_list[i]);
 			if(team >= 2)
 			{
-				if(!value)
+				if(value == 1)
 				{
 					if(team == CS_TEAM_T)
 					{
@@ -735,10 +731,22 @@ public Action: CMD_Swap(client, args)
 					if(team == CS_TEAM_T)
 					{
 						SetEntProp(target_list[i], Prop_Data, "m_iPendingTeamNum", CS_TEAM_CT);
+						int frags = GetClientFrags(target_list[i]) +1;
+						int deaths = GetClientDeaths(target_list[i])-1;
+						int score = CS_GetClientContributionScore(target_list[i])+2;
+						SetEntProp(target_list[i], Prop_Data, "m_iFrags", frags);
+						SetEntProp(target_list[i], Prop_Data, "m_iDeaths", deaths);
+						CS_SetClientContributionScore(target_list[i], score);
 					}
 					else
 					{
 						SetEntProp(target_list[i], Prop_Data, "m_iPendingTeamNum", CS_TEAM_T);
+						int frags = GetClientFrags(target_list[i]) +1;
+						int deaths = GetClientDeaths(target_list[i])-1;
+						int score = CS_GetClientContributionScore(target_list[i])+2;
+						SetEntProp(target_list[i], Prop_Data, "m_iFrags", frags);
+						SetEntProp(target_list[i], Prop_Data, "m_iDeaths", deaths);
+						CS_SetClientContributionScore(target_list[i], score);
 					}
 				}
 			}
@@ -762,7 +770,7 @@ public Action: CMD_Swap(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_Spec(client, args)
+public Action CMD_Spec(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -775,11 +783,10 @@ public Action: CMD_Spec(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
+		
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -789,12 +796,12 @@ public Action: CMD_Spec(client, args)
 	}
 	
 	GetCmdArg(2, buffer, sizeof(buffer));
-	new value = StringToInt(buffer);
-	for(new i = 0; i < target_count; i++)
+	int value = StringToInt(buffer);
+	for(int i = 0; i < target_count; i++)
 	{
 		if(IsClientInGame(target_list[i]))
 		{
-			if(!value)
+			if(value == 1)
 			{
 				ChangeClientTeam(target_list[i], CS_TEAM_SPECTATOR);
 			}
@@ -817,7 +824,7 @@ public Action: CMD_Spec(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_Scramble(client, args)
+public Action CMD_Scramble(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -832,7 +839,7 @@ public Action: CMD_Scramble(client, args)
 }
 
 //==========//
-public Action: CMD_Give(client, args)
+public Action CMD_Give(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -845,11 +852,9 @@ public Action: CMD_Give(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[128],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -864,7 +869,7 @@ public Action: CMD_Give(client, args)
 		Format(buffer, sizeof(buffer), "knife");
 	}
 	
-	new type = ItemType(buffer);
+	char type = ItemType(buffer);
 	if(!type)
 	{
 		if(GetConVarBool(CVAR_INVALID))
@@ -882,11 +887,11 @@ public Action: CMD_Give(client, args)
 		return Plugin_Handled;
 	}
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		if(StrEqual(buffer, "knife", false) && !GetConVarBool(FindConVar("mp_drop_knife_enable")))
 		{
-			new knife = -1;
+			int knife = -1;
 			while((knife = GetPlayerWeaponSlot(target_list[i], 2)) != -1)
 			{
 				if(IsValidEntity(knife))
@@ -910,7 +915,7 @@ public Action: CMD_Give(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_Equip(client, args)
+public Action CMD_Equip(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -923,11 +928,9 @@ public Action: CMD_Equip(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[128],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 		
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -942,7 +945,7 @@ public Action: CMD_Equip(client, args)
 		Format(buffer, sizeof(buffer), "knife");
 	}
 	
-	new type = ItemType(buffer);
+	char type = ItemType(buffer);
 	if(!type)
 	{
 		if(GetConVarBool(CVAR_INVALID))
@@ -960,7 +963,7 @@ public Action: CMD_Equip(client, args)
 		return Plugin_Handled;
 	}
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		DisarmPlayer(target_list[i]);
 		GivePlayerWeapon(target_list[i], buffer, type);
@@ -978,7 +981,7 @@ public Action: CMD_Equip(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_Disarm(client, args)
+public Action CMD_Disarm(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -991,11 +994,9 @@ public Action: CMD_Disarm(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -1004,7 +1005,7 @@ public Action: CMD_Disarm(client, args)
 		return Plugin_Handled;
 	}
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		DisarmPlayer(target_list[i]);
 	}
@@ -1023,7 +1024,7 @@ public Action: CMD_Disarm(client, args)
 }
 
 //==========//
-public Action: CMD_Respawn(client, args)
+public Action CMD_Respawn(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -1036,11 +1037,9 @@ public Action: CMD_Respawn(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if(StrEqual(buffer, "@spec", false) || StrEqual(buffer, "@spectator", false))
@@ -1055,7 +1054,7 @@ public Action: CMD_Respawn(client, args)
 		return Plugin_Handled;
 	}
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		if(IsClientInGame(target_list[i]))
 		{
@@ -1087,18 +1086,16 @@ public Action: CMD_Respawn(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_Bury(client, args)
+public Action CMD_Bury(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -1107,12 +1104,12 @@ public Action: CMD_Bury(client, args)
 		return Plugin_Handled;
 	}
 	
-	new Float: pos[3];
-	for(new i = 0; i < target_count; i++)
+	float pos[3];
+	for(int i = 0; i < target_count; i++)
 	{
 		GetClientAbsOrigin(target_list[i], pos);
 		pos[2] -= 36.5;
-		TeleportEntity(target_list[i], pos, NULL_VECTOR, Float: {0.0, 0.0, 0.0});
+		TeleportEntity(target_list[i], pos, NULL_VECTOR, view_as<float>({0.0, 0.0, 0.0}));
 		if(!StrEqual(SOUND_BURY, "", false))
 		{
 			EmitSoundToAll(SOUND_BURY, target_list[i]);
@@ -1131,18 +1128,16 @@ public Action: CMD_Bury(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_UnBury(client, args)
+public Action CMD_UnBury(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -1151,12 +1146,12 @@ public Action: CMD_UnBury(client, args)
 		return Plugin_Handled;
 	}
 	
-	new Float: pos[3];
-	for(new i = 0; i < target_count; i++)
+	float pos[3];
+	for(int i = 0; i < target_count; i++)
 	{
 		GetClientAbsOrigin(target_list[i], pos);
 		pos[2] += 36.5;
-		TeleportEntity(target_list[i], pos, NULL_VECTOR, Float: {0.0, 0.0, 0.0});
+		TeleportEntity(target_list[i], pos, NULL_VECTOR, view_as<float>({0.0, 0.0, 0.0}));
 		if(!StrEqual(SOUND_BURY, "", false))
 		{
 			EmitSoundToAll(SOUND_BURY, target_list[i]);
@@ -1176,7 +1171,7 @@ public Action: CMD_UnBury(client, args)
 	return Plugin_Handled;
 }
 //==========//
-public Action: CMD_Speed(client, args)
+public Action CMD_Speed(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -1189,11 +1184,9 @@ public Action: CMD_Speed(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -1203,14 +1196,14 @@ public Action: CMD_Speed(client, args)
 	}
 	
 	GetCmdArg(2, buffer, sizeof(buffer));
-	new Float: value = StringToFloat(buffer);
+	float value = StringToFloat(buffer);
 	if((value < 0.0) || (value > 500.0))
 	{
 		ReplyToCommand(client, "%t", "CMD_Speed_Usage");
 		return Plugin_Handled;
 	}
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		SetEntPropFloat(target_list[i], Prop_Data, "m_flLaggedMovementValue", value);
 	}
@@ -1227,7 +1220,7 @@ public Action: CMD_Speed(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_God(client, args)
+public Action CMD_God(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -1240,11 +1233,9 @@ public Action: CMD_God(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -1254,7 +1245,7 @@ public Action: CMD_God(client, args)
 	}
 	
 	GetCmdArg(2, buffer, sizeof(buffer));
-	new value = StringToInt(buffer);
+	int value = StringToInt(buffer);
 	
 	if((value != 0) && (value != 1))
 	{
@@ -1262,7 +1253,7 @@ public Action: CMD_God(client, args)
 		return Plugin_Handled;
 	}
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		SetEntProp(target_list[i], Prop_Data, "m_takedamage", value ? 0 : 2);
 	}
@@ -1279,7 +1270,7 @@ public Action: CMD_God(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_Helmet(client, args)
+public Action CMD_Helmet(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -1292,11 +1283,9 @@ public Action: CMD_Helmet(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -1306,7 +1295,7 @@ public Action: CMD_Helmet(client, args)
 	}
 	
 	GetCmdArg(2, buffer, sizeof(buffer));
-	new value = StringToInt(buffer);
+	int value = StringToInt(buffer);
 	
 	if((value != 0) && (value != 1))
 	{
@@ -1314,7 +1303,7 @@ public Action: CMD_Helmet(client, args)
 		return Plugin_Handled;
 	}
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		SetEntProp(target_list[i], Prop_Send, "m_bHasHelmet", value);
 	}
@@ -1333,7 +1322,7 @@ public Action: CMD_Helmet(client, args)
 }
 
 //==========//
-public Action: CMD_Health(client, args)
+public Action CMD_Health(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -1346,11 +1335,9 @@ public Action: CMD_Health(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -1360,16 +1347,15 @@ public Action: CMD_Health(client, args)
 	}
 	
 	GetCmdArg(2, buffer, sizeof(buffer));
-	new value = StringToInt(buffer);
+	int value = StringToInt(buffer);
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		if((buffer[0] == '+') || (buffer[0] == '-'))
 		{
 			value = value + GetEntProp(target_list[i], Prop_Data, "m_iHealth");
 		}
 		SetEntProp(target_list[i], Prop_Data, "m_iHealth", value);
-		//SetEntProp(target_list[i], Prop_Data, "m_iMaxHealth", value);
 	}
 	
 	if(tn_is_ml)
@@ -1384,7 +1370,7 @@ public Action: CMD_Health(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_Armor(client, args)
+public Action CMD_Armor(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -1397,11 +1383,9 @@ public Action: CMD_Armor(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -1411,9 +1395,9 @@ public Action: CMD_Armor(client, args)
 	}
 	
 	GetCmdArg(2, buffer, sizeof(buffer));
-	new value = StringToInt(buffer);
+	int value = StringToInt(buffer);
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		if((buffer[0] == '+') || (buffer[0] == '-'))
 		{
@@ -1434,7 +1418,7 @@ public Action: CMD_Armor(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_Cash(client, args)
+public Action CMD_Cash(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -1447,11 +1431,9 @@ public Action: CMD_Cash(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -1461,9 +1443,9 @@ public Action: CMD_Cash(client, args)
 	}
 	
 	GetCmdArg(2, buffer, sizeof(buffer));
-	new value = StringToInt(buffer);
+	int value = StringToInt(buffer);
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		if(IsClientInGame(target_list[i]))
 		{
@@ -1488,7 +1470,7 @@ public Action: CMD_Cash(client, args)
 	return Plugin_Handled;
 }
 //==========//
-public Action: CMD_SetStats(client, args)
+public Action CMD_SetStats(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -1501,11 +1483,9 @@ public Action: CMD_SetStats(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: target_name[MAX_TARGET_LENGTH],
-		String: buffer[2][64],
-		target_list[MAXPLAYERS],
-		bool: tn_is_ml,
-		target_count;
+	char target_name[MAX_TARGET_LENGTH], buffer[2][512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	GetCmdArg(1, buffer[0], sizeof(buffer[]));
 	if((target_count = ProcessTargetString(buffer[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
@@ -1516,9 +1496,9 @@ public Action: CMD_SetStats(client, args)
 	
 	GetCmdArg(2, buffer[0], sizeof(buffer[]));
 	GetCmdArg(3, buffer[1], sizeof(buffer[]));
-	new value = StringToInt(buffer[1]);
+	int value = StringToInt(buffer[1]);
 	
-	for(new i = 0; i < target_count; i++)
+	for(int i = 0; i < target_count; i++)
 	{
 		if(IsClientInGame(target_list[i]))
 		{
@@ -1591,7 +1571,7 @@ public Action: CMD_SetStats(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_TeamScores(client, args)
+public Action CMD_TeamScores(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -1604,12 +1584,11 @@ public Action: CMD_TeamScores(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String: team[8],
-		String: buffer[64];
+	char team[8], buffer[64];
 	
 	GetCmdArg(1, team, sizeof(team));
 	GetCmdArg(2, buffer, sizeof(buffer));
-	new value = StringToInt(buffer);
+	int value = StringToInt(buffer);
 	
 	if(StrEqual(team, "t", false) || StrEqual(team, "2", false))
 	{
@@ -1639,18 +1618,18 @@ public Action: CMD_TeamScores(client, args)
 	}
 	return Plugin_Handled;
 }
-public Action: CMD_SpawnChicken(client, args)
+public Action CMD_SpawnChicken(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
 		return Plugin_Handled;
 	}
 	
-	new Float: vec[2][3];
+	float vec[2][3];
 	GetClientEyePosition(client, vec[0]);
 	GetClientEyeAngles(client, vec[1]);
 	
-	new Handle: trace = TR_TraceRayFilterEx(vec[0], vec[1], MASK_SOLID, RayType_Infinite, Filter_ExcludePlayers);
+	Handle trace = TR_TraceRayFilterEx(vec[0], vec[1], MASK_SOLID, RayType_Infinite, Filter_ExcludePlayers);
 	if(!TR_DidHit(trace))
 	{
 		return Plugin_Handled;
@@ -1658,10 +1637,10 @@ public Action: CMD_SpawnChicken(client, args)
 	TR_GetEndPosition(vec[0], trace);
 	CloseHandle(trace);
 	
-	new String: buffer[6][4],
-		values[6];
+	char buffer[6][4];
+	char values[6];
 	
-	for(new i = 0; i <= 5; i++)
+	for(int i = 0; i <= 5; i++)
 	{
 		GetCmdArg(i + 1, buffer[i], sizeof(buffer[]));
 		values[i] = StringToInt(buffer[i]);
@@ -1673,13 +1652,13 @@ public Action: CMD_SpawnChicken(client, args)
 		return Plugin_Handled;
 	}
 	
-	new chicken = CreateEntityByName("chicken");
+	char chicken = CreateEntityByName("chicken");
 	if(!IsValidEntity(chicken))
 	{
 		return Plugin_Handled;
 	}
 	
-	new String: color[16];
+	char color[16];
 	Format(color, sizeof(color), "%s %s %s", buffer[2], buffer[3], buffer[4]);
 	DispatchKeyValue(chicken, "glowcolor", color);
 	DispatchKeyValue(chicken, "glowdist", "640");
@@ -1716,18 +1695,18 @@ public Action: CMD_SpawnChicken(client, args)
 	LogActionEx(client, "%t", "CMD_SpawnChicken", values[0], values[1], values[2], values[3], values[4], values[5]);
 	return Plugin_Handled;
 }
-public Action: CMD_SpawnBall(client, args)
+public Action CMD_SpawnBall(int client, int args)
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
 		return Plugin_Handled;
 	}
 	
-	new Float: vec[2][3];
+	float vec[2][3];
 	GetClientEyePosition(client, vec[0]);
 	GetClientEyeAngles(client, vec[1]);
 	
-	new Handle: trace = TR_TraceRayFilterEx(vec[0], vec[1], MASK_SOLID, RayType_Infinite, Filter_ExcludePlayers);
+	Handle trace = TR_TraceRayFilterEx(vec[0], vec[1], MASK_SOLID, RayType_Infinite, Filter_ExcludePlayers);
 	if(!TR_DidHit(trace))
 	{
 		return Plugin_Handled;
@@ -1735,7 +1714,7 @@ public Action: CMD_SpawnBall(client, args)
 	TR_GetEndPosition(vec[0], trace);
 	CloseHandle(trace);
 	
-	new ball = CreateEntityByName("prop_physics_multiplayer");
+	char ball = CreateEntityByName("prop_physics_multiplayer");
 	if(!IsValidEntity(ball))
 	{
 		return Plugin_Handled;
@@ -1754,9 +1733,9 @@ public Action: CMD_SpawnBall(client, args)
 }
 
 //-----STOCKS-----//
-GivePlayerWeapon(client, String: weapon[], type)
+stock char GivePlayerWeapon(int client, char[] weapon, int type)
 {
-	new String: buffer[64];
+	char buffer[64];
 	if(type == 1)
 	{
 		Format(buffer, sizeof(buffer), "weapon_%s", weapon);
@@ -1768,11 +1747,11 @@ GivePlayerWeapon(client, String: weapon[], type)
 	return GivePlayerItem(client, buffer);
 }
 
-DisarmPlayer(client)
+stock int DisarmPlayer(int client)
 {
-	for(new i = 0; i < 5; i++)
+	for(int i = 0; i < 5; i++)
 	{
-		new weapon = -1;
+		char weapon = -1;
 		while((weapon = GetPlayerWeaponSlot(client, i)) != -1)
 		{
 			if(IsValidEntity(weapon))
@@ -1787,32 +1766,32 @@ DisarmPlayer(client)
 	SetEntProp(client, Prop_Send, "m_bHasHelmet", 0);
 }
 
-LogActionEx(client, String: message[], any: ...)
+stock char LogActionEx(int client, char[] message, any ...)
 {
 	if(GetConVarBool(CVAR_LOG))
 	{
-		new String: buffer[256];
+		char buffer1337[256];
 		SetGlobalTransTarget(LANG_SERVER);
-		VFormat(buffer, sizeof(buffer), message, 3);
-		LogMessage("%N: %s", client, buffer);
+		VFormat(buffer1337, sizeof(buffer1337), message, 3);
+		LogMessage("%N: %s", client, buffer1337);
 	}
 }
 
-bool: IsClientValid(client)
+bool IsClientValid(int client)
 {
 	return ((client > 0) && (client <= MaxClients));
 }
 
-ItemType(String: itemname[])
+stock char ItemType(const char[] itemname)
 {
-	for(new i = 0; i < sizeof(WeaponsList); i++)
+	for(int i = 0; i < sizeof(WeaponsList); i++)
 	{
 		if(StrEqual(itemname, WeaponsList[i], false))
 		{
 			return 1;
 		}
 	}
-	for(new i = 0; i < sizeof(ItemsList); i++)
+	for(int i = 0; i < sizeof(ItemsList); i++)
 	{
 		if(StrEqual(itemname, ItemsList[i], false))
 		{
@@ -1823,7 +1802,7 @@ ItemType(String: itemname[])
 }
 
 //-----FILTERS-----//
-public bool: Filter_ExcludePlayers(entity, contentsMask, any: data)
+public bool Filter_ExcludePlayers(int entity, int contentsMask, any data)
 {
 	return !((entity > 0) && (entity <= MaxClients));
 }
