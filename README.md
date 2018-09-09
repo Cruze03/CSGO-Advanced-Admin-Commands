@@ -1,4 +1,4 @@
-# CSGO-Advance-Admin-Commands
+# CSGO-Advanced-Admin-Commands
 Original Author:- PeEzZ. Plan to modify it more!
 
 CHANGLELOG:-
