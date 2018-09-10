@@ -14,4 +14,4 @@ CHANGLELOG:-
 TODO:-
 * ~New Syntax~
 * Add more commands! [Doing whenever I have idea and time] 
-* Suggest <Contact me [here](http://steamcommunity.com/profiles/76561198132924835)
+* Suggest [Contact me [here](http://steamcommunity.com/profiles/76561198132924835)]
