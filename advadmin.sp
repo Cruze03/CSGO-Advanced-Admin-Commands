@@ -10,9 +10,9 @@
 public Plugin myinfo =
 {
 	name = "[CSGO] Advanced Admin",
-	author = "PeEzZ.[edit Cruze]",
+	author = "PeEzZ.[edit Cruze]", // Farbror Godis for curse command's code
 	description = "Advanced commands for admins.",
-	version = "2.0",
+	version = "2.1",
 	url = "https://forums.alliedmods.net/showthread.php?t=285493"
 };
 
@@ -33,8 +33,12 @@ Handle CVAR_ANNOUNCE = INVALID_HANDLE;
 Handle CVAR_SILENTADMINTEAMJOIN = INVALID_HANDLE;
 Handle CVAR_INVALID = INVALID_HANDLE;
 Handle CVAR_LOG = INVALID_HANDLE;
+Handle CVAR_HealthRest;
 
 float SaveVec[MAXPLAYERS + 1][2][3];
+
+bool g_toggle[MAXPLAYERS+1];
+bool g_toggle2[MAXPLAYERS+1];
 
 char WeaponsList[][] = //VALID WEAPON NAMES HERE
 {
@@ -42,7 +46,7 @@ char WeaponsList[][] = //VALID WEAPON NAMES HERE
 	"decoy", "flashbang", "hegrenade", "molotov", "incgrenade", "smokegrenade", "tagrenade", //grenades
 	"usp_silencer", "glock", "tec9", "p250", "hkp2000", "cz75a", "deagle", "revolver", "fiveseven", "elite", //pistoles
 	"nova", "xm1014", "sawedoff", "mag7", "m249", "negev", //heavy
-	"mp9", "mp7", "ump45", "p90", "bizon", "mac10", //smgs
+	"mp9", "mp7", "ump45", "p90", "bizon", "mac10", "mp5sd", //smgs
 	"ak47", "aug", "famas", "sg556", "galilar", "m4a1", "m4a1_silencer", //rifles
 	"awp", "ssg08", "scar20", "g3sg1" //snipers
 };
@@ -55,21 +59,22 @@ char ItemsList[][] = //VALID ITEM NAMES HERE, HEAVYASSAULTSUIT ONLY WORKS WHEN I
 
 public void OnPluginStart()
 {
-	CVAR_ADMINS					= CreateConVar("sm_advadmin_admins",		"2",						"Settings of !admins command, 0 - disable, 1 - show fake message, 2 - show online admins", _, true, 0.0, true, 2.0);
-	CVAR_ANNOUNCE					=	CreateConVar("sm_advadmin_announce",		"2",						"Join announce, 0 - disable, 1 - simple announce, 2 - announce with country name, 3 = no admin annouce", _, true, 0.0, true, 3.0);
+	CVAR_ADMINS					= 	CreateConVar("sm_advadmin_admins",		"2",			"Settings of !admins command, 0 - disable, 1 - show fake message, 2 - show online admins", _, true, 0.0, true, 2.0);
+	CVAR_ANNOUNCE					=	CreateConVar("sm_advadmin_announce",		"2",			"Join announce, 0 - disable, 1 - simple announce, 2 - announce with country name, 3 = no admin annouce", _, true, 0.0, true, 3.0);
 	CVAR_SILENTADMINTEAMJOIN		=	CreateConVar("sm_advadmin_noteamjoinmsg",	"1",			"No Team join message for admin, 0 = disable, 1 = enable", _, true, 0.0, true, 1.0);
-	CVAR_INVALID					= CreateConVar("sm_advadmin_invalid",		"1",							"Invalid given item will show for all players just for fun, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
-	CVAR_LOG						= CreateConVar("sm_advadmin_log",			"1",							"Enable logging for plugin, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
+	CVAR_INVALID					= 	CreateConVar("sm_advadmin_invalid",		"1",			"Invalid given item will show for all players just for fun, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
+	CVAR_LOG						= 	CreateConVar("sm_advadmin_log",			"1",			"Enable logging for plugin, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
+	CVAR_HealthRest				=	CreateConVar("sm_advadmin_healthrest",	"1",			"Restrict health's value >= 0? (because Setting the health to 0 stops the player from any movement in CSGO) ", _, true, 0.0, true, 1.0);
 	
 	//-----//
-	RegAdminCmd("sm_extend",		CMD_Extend,			ADMFLAG_CHANGEMAP,	"Extending the map");
+	RegAdminCmd("sm_extend",		CMD_Extend,		ADMFLAG_CHANGEMAP,	"Extending the map");
 	RegAdminCmd("sm_clearmap",		CMD_ClearMap,		ADMFLAG_GENERIC,	"Deleting dropped weapons, items and chickens without owner from the map");
 	RegAdminCmd("sm_restartgame",	CMD_RestartGame,	ADMFLAG_GENERIC,	"Restarting the game after the specified seconds");
 	RegAdminCmd("sm_rg",			CMD_RestartGame,	ADMFLAG_GENERIC,	"Restarting the game after the specified seconds");
 	RegAdminCmd("sm_restartround",	CMD_RestartRound,	ADMFLAG_GENERIC,	"Restarting the round after the specified seconds");
 	RegAdminCmd("sm_rr",			CMD_RestartRound,	ADMFLAG_GENERIC,	"Restarting the round after the specified seconds");
-	RegAdminCmd("sm_equipments",	CMD_Equipments,		ADMFLAG_GENERIC,	"Showing the valid equipment names in the console");
-	RegAdminCmd("sm_playsound",		CMD_PlaySound,		ADMFLAG_GENERIC,	"Playing a sound for the targets, with custom settings");
+	RegAdminCmd("sm_equipments",	CMD_Equipments,	ADMFLAG_GENERIC,	"Showing the valid equipment names in the console");
+	RegAdminCmd("sm_playsound",	CMD_PlaySound,	ADMFLAG_GENERIC,	"Playing a sound for the targets, with custom settings");
 	//-----//
 	RegAdminCmd("sm_teleport",		CMD_Teleport,		ADMFLAG_BAN,		"Teleporting the target to something");
 	RegAdminCmd("sm_tele",			CMD_Teleport,		ADMFLAG_BAN,		"Teleporting the target to something");
@@ -82,43 +87,82 @@ public void OnPluginStart()
 	RegAdminCmd("sm_scramble",		CMD_Scramble,		ADMFLAG_KICK,		"Scramble the teams by scores");
 	//-----//
 	RegAdminCmd("sm_give",			CMD_Give,			ADMFLAG_BAN,		"Give something for the targets");
-	RegAdminCmd("sm_equip",			CMD_Equip,			ADMFLAG_BAN,		"Equipping something for the targets");
-	RegAdminCmd("sm_disarm",		CMD_Disarm,			ADMFLAG_BAN,		"Disarming the targets");
+	RegAdminCmd("sm_equip",		CMD_Equip,			ADMFLAG_BAN,		"Equipping something for the targets");
+	RegAdminCmd("sm_disarm",		CMD_Disarm,		ADMFLAG_BAN,		"Disarming the targets");
 	//-----//
 	RegAdminCmd("sm_respawn",		CMD_Respawn,		ADMFLAG_KICK,		"Respawning the targets");
 	RegAdminCmd("sm_bury",			CMD_Bury,			ADMFLAG_KICK,		"Burying the targets");
-	RegAdminCmd("sm_unbury",		CMD_UnBury,			ADMFLAG_KICK,		"Unburying the targets");
+	RegAdminCmd("sm_unbury",		CMD_UnBury,		ADMFLAG_KICK,		"Unburying the targets");
 	//-----//
-	RegAdminCmd("sm_speed",			CMD_Speed,			ADMFLAG_BAN,		"Set the speed multipiler of the targets");
+	RegAdminCmd("sm_speed",		CMD_Speed,			ADMFLAG_BAN,		"Set the speed multipiler of the targets");
 	RegAdminCmd("sm_god",			CMD_God,			ADMFLAG_BAN,		"Set godmode for the targets");
-	RegAdminCmd("sm_helmet",		CMD_Helmet,			ADMFLAG_KICK,		"Set helmet for the targets");
+	RegAdminCmd("sm_helmet",		CMD_Helmet,		ADMFLAG_KICK,		"Set helmet for the targets");
 	//-----//
-	RegAdminCmd("sm_hp",			CMD_Health,			ADMFLAG_KICK,		"Set the health for the targets");
-	RegAdminCmd("sm_health",		CMD_Health,			ADMFLAG_KICK,		"Set the health for the targets");
-	RegAdminCmd("sm_armor",			CMD_Armor,			ADMFLAG_KICK,		"Set the armor for the targetsr");
+	RegAdminCmd("sm_hp",			CMD_Health,		ADMFLAG_KICK,		"Set the health for the targets");
+	RegAdminCmd("sm_health",		CMD_Health,		ADMFLAG_KICK,		"Set the health for the targets");
+	RegAdminCmd("sm_armor",		CMD_Armor,			ADMFLAG_KICK,		"Set the armor for the targetsr");
 	RegAdminCmd("sm_cash",			CMD_Cash,			ADMFLAG_BAN,		"Set the cash for the targets");
 	//-----//
 	RegAdminCmd("sm_setstats",		CMD_SetStats,		ADMFLAG_BAN,		"Set the stats for the targets");
-	RegAdminCmd("sm_teamscores",	CMD_TeamScores,		ADMFLAG_BAN,		"Set the teams scores");
+	RegAdminCmd("sm_teamscores",	CMD_TeamScores,	ADMFLAG_BAN,		"Set the teams scores");
 	//-----//
 	RegAdminCmd("sm_spawnchicken",	CMD_SpawnChicken,	ADMFLAG_GENERIC,	"Spawn one chicken on your aim position");
 	RegAdminCmd("sm_sc",			CMD_SpawnChicken,	ADMFLAG_GENERIC,	"Spawn one chicken on your aim position");
-	RegAdminCmd("sm_spawnball",		CMD_SpawnBall,		ADMFLAG_GENERIC,	"Spawn one ball on your aim position");
+	RegAdminCmd("sm_spawnball",	CMD_SpawnBall,	ADMFLAG_GENERIC,	"Spawn one ball on your aim position");
+	RegAdminCmd("sm_curse", 		CMD_CURSE, 		ADMFLAG_SLAY, 		"sm_curse <#userid|name> [0/1]");
 	
-	RegConsoleCmd("sm_admins",		CMD_Admins,			"Showing the online admins");
+	RegConsoleCmd("sm_admins",	CMD_Admins,							"Showing the online admins");
 	
 	HookEvent("player_team", Event_PlayerTeam, EventHookMode_Pre);
+	HookEvent("player_death", Event_PlayerDeath);
 	
 	LoadTranslations("common.phrases");
 	LoadTranslations("advadmin.phrases");
 }
+public Action OnPlayerRunCmd(int iClient, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon) 
+{
+	if(g_toggle2[iClient]) 
+	{
+		vel[1] = -vel[1]; // Will always equal to the opposite value, according to rules of arithmetic.
+			
+		if(buttons & IN_MOVELEFT) // Fixes walking animations for CS:GO.
+		{ 
+			buttons &= ~IN_MOVELEFT;
+			buttons |= IN_MOVERIGHT;
+		} 
+		else if(buttons & IN_MOVERIGHT) 
+		{
+			buttons &= ~IN_MOVERIGHT;
+			buttons |= IN_MOVELEFT;
+		}
+		vel[0] = -vel[0];
+
+		if(buttons & IN_FORWARD) 
+		{
+			buttons &= ~IN_FORWARD;
+			buttons |= IN_BACK;
+		} 
+		else if(buttons & IN_BACK) 
+		{
+			buttons &= ~IN_BACK;
+			buttons |= IN_FORWARD;
+		}
+		return Plugin_Changed;
+	}
+	return Plugin_Continue;
+}
+public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast) 
+{
+	g_toggle2[GetClientOfUserId(event.GetInt("userid"))] = false;
+}
+
 public Action Event_PlayerTeam(Event event, const char[] name, bool dontBroadcast)
 {
-    for(int i = 1; i <= MaxClients; i++)
+    for(int z = 1; z <= MaxClients; z++)
     {
-        if(IsClientInGame(i) && GetConVarBool(CVAR_SILENTADMINTEAMJOIN))
+        if(IsClientInGame(z) && GetConVarBool(CVAR_SILENTADMINTEAMJOIN))
         {
-			if(GetUserAdmin(i) != INVALID_ADMIN_ID)
+			if(GetUserAdmin(z) != INVALID_ADMIN_ID)
 			{
 				event.SetBool("silent", true); //Thanks Ilusion9
 			}
@@ -1227,7 +1271,7 @@ public Action CMD_God(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	if(args != 2)
+	if(args != 1)
 	{
 		ReplyToCommand(client, "%t", "CMD_God_Usage");
 		return Plugin_Handled;
@@ -1244,29 +1288,30 @@ public Action CMD_God(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	GetCmdArg(2, buffer, sizeof(buffer));
-	int value = StringToInt(buffer);
-	
-	if((value != 0) && (value != 1))
-	{
-		ReplyToCommand(client, "%t", "CMD_God_Usage");
-		return Plugin_Handled;
-	}
-	
 	for(int i = 0; i < target_count; i++)
 	{
-		SetEntProp(target_list[i], Prop_Data, "m_takedamage", value ? 0 : 2);
+		if(g_toggle[target_list[i]])
+		{
+			g_toggle[target_list[i]] = false;
+			SetEntProp(target_list[i], Prop_Data, "m_takedamage", 2, 1);
+		}
+		else
+		{
+			g_toggle[target_list[i]] = true;
+
+			SetEntProp(target_list[i], Prop_Data, "m_takedamage", 1, 1);
+		}
 	}
 	
 	if(tn_is_ml)
 	{
-		ShowActivity2(client, CMD_PREFIX, "%t", "CMD_God", target_name, value);
-		LogActionEx(client, "%t", "CMD_God", target_name, value);
+		ShowActivity2(client, CMD_PREFIX, "%t", "CMD_God", target_name);
+		LogActionEx(client, "%t", "CMD_God", target_name);
 	}
 	else
 	{
-		ShowActivity2(client, CMD_PREFIX, "%t", "CMD_God", "_s", target_name, value);
-		LogActionEx(client, "%t", "CMD_God", "_s", target_name, value);
+		ShowActivity2(client, CMD_PREFIX, "%t", "CMD_God", "_s", target_name);
+		LogActionEx(client, "%t", "CMD_God", "_s", target_name);
 	}
 	return Plugin_Handled;
 }
@@ -1349,6 +1394,14 @@ public Action CMD_Health(int client, int args)
 	GetCmdArg(2, buffer, sizeof(buffer));
 	int value = StringToInt(buffer);
 	
+	int iHealthRestriction = GetConVarBool(CVAR_HealthRest);
+	
+	if (value <= 0 && iHealthRestriction)
+	{
+		ReplyToCommand(client, "%t", "CMD_Health_Rest");
+		return Plugin_Handled;
+	}
+			
 	for(int i = 0; i < target_count; i++)
 	{
 		if((buffer[0] == '+') || (buffer[0] == '-'))
@@ -1731,6 +1784,54 @@ public Action CMD_SpawnBall(int client, int args)
 	LogActionEx(client, "%t", "CMD_SpawnBall");
 	return Plugin_Handled;
 }
+public Action CMD_CURSE(int client, int args) 
+{
+	if(!IsClientValid(client) || !IsClientInGame(client))
+	{
+		return Plugin_Handled;
+	}
+	if(args != 1) 
+	{
+		ReplyToCommand(client, "[SM] Usage: sm_curse <#userid|name>");
+		return Plugin_Handled;
+	}
+	char arg1[MAX_NAME_LENGTH];
+	GetCmdArg(1, arg1, sizeof(arg1));
+
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
+
+	if((target_count = ProcessTargetString(arg1, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0) 
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+
+	for(int i = 0; i < target_count; i++) 
+	{
+		if(g_toggle2[target_list[i]])
+		{
+			g_toggle2[target_list[i]] = false;
+		}
+		else
+		{
+			g_toggle2[target_list[i]] = true;
+		}
+	}
+
+	if(tn_is_ml) 
+	{
+		ShowActivity2(client, CMD_PREFIX, "%t", "Toggled curse on target", target_name);
+	} 
+	else 
+	{
+		ShowActivity2(client, CMD_PREFIX, "%t", "Toggled curse on target", "_s", target_name);
+	}
+
+	return Plugin_Handled;
+}
+
 
 //-----STOCKS-----//
 stock char GivePlayerWeapon(int client, char[] weapon, int type)
