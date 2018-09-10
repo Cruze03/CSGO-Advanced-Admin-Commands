@@ -1,5 +1,6 @@
 # CSGO-Advanced-Admin-Commands
 Original Author:- PeEzZ. Plan to modify it more!
+Download:- [:clickmesenpai:](https://github.com/Cruze03/CSGO-Advanced-Admin-Commands/releases)
 
 CHANGLELOG:-
 * Added CVAR "sm_advadmin_noteamjoinmsg" which enables/disables admin's team join messages
