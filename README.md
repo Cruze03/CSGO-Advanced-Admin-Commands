@@ -7,6 +7,9 @@ CHANGLELOG:-
 * Changed "!bury (unbury)1/(bury)0" to "!bury and !unbury"
 * Added New Syntax
 * Fixed !team,!swap and !spec
+* New command !curse which will make target go opposite direction.
+* New CVAR: "sm_advadmin_healthres" which restrict keeping health's value >=0.
+* !god command is now toggle instead of bool to enable/disable
 
 TODO:-
 * ~New Syntax~
