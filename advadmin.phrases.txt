@@ -240,12 +240,12 @@
 	//-----GOD-----//
 	"CMD_God_Usage"
 	{
-		"en"		"[SM] Usage: sm_god <target> <0/1>"
+		"en"		"[SM] Usage: sm_god <target>"
 	}
 	"CMD_God"
 	{
-		"#format"	"{1:t},{2:i}"
-		"en"		"{1}'s godmode set to: {2}"
+		"#format"	"{1:t}"
+		"en"		"Toggled godmode on {1}."
 	}
 	//-----HELMET-----//
 	"CMD_Helmet_Usage"
@@ -262,6 +262,10 @@
 	"CMD_Health_Usage"
 	{
 		"en"		"[SM] Usage: sm_hp <target> <[+/-]amount>"
+	}
+	"CMD_Health_Rest"
+	{
+		"en"		"[SM] Please choose a higher value!"
 	}
 	"CMD_Health"
 	{
@@ -334,5 +338,11 @@
 	"CMD_SpawnBall"
 	{
 		"en"		"The ball is pumped up, lets play."
+	}
+	//-----CURSE-----//
+	"Toggled curse on target"
+	{
+		"#format"	"{1:t}"
+		"en"		"Toggled curse on {1}."
 	}
 }
