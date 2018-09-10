@@ -71,7 +71,7 @@
 				"title"		"Weapon:"
 				
 				
-				//PISTOLES
+				//PISTOLS
 				"1"			"deagle"
 				"1."		"Desert Eagle"
 				
@@ -242,7 +242,7 @@
 				"title"		"Weapon:"
 				
 				
-				//PISTOLES
+				//PISTOLS
 				"1"			"deagle"
 				"1."		"Desert Eagle"
 				
@@ -397,16 +397,6 @@
 				"47."		"C4 Bomb"
 			}
 		}
-		"Melee Player"
-		{
-			"cmd"		"sm_equip #1"
-			
-			"1"
-			{
-				"type" 			"player"
-				"title"			"Player:"
-			}
-		}
 		"Disarm Player"
 		{
 			"cmd"		"sm_disarm #1"
@@ -513,19 +503,13 @@
 		}
 		"Set God"
 		{
-			"cmd"		"sm_god #1 #2"
+			"cmd"		"sm_god #1"
 			
 			"1"
 			{
 				"type" 		"player"
 				"method"	"name"
 				"title"		"Player:"
-			}
-			
-			"2"
-			{
-				"type"		"onoff"
-				"title"		"God Mode:"
 			}
 		}
 		"Set Armour"
@@ -816,6 +800,17 @@
 		"Spawn Ball"
 		{
 			"cmd"		"sm_spawnball"
+		}
+		"Curse"
+		{
+			"cmd"		"sm_curse #1"
+			
+			"1"
+			{
+				"type" 		"player"
+				"method"	"name"
+				"title"		"Player:"
+			}
 		}
 	}
 }
