@@ -134,6 +134,10 @@
 	{
 		"en"		"[SM] Usage: sm_team <target> <TeamID | SPEC | SPECTATOR | T | CT> <0/1>"
 	}
+	"CMD_Team_Inst"
+	{
+		"en"		"Moved target(s) instantly because value of mp_spectators_max is <= 0"
+	}
 	"CMD_Team_Spec"
 	{
 		"#format"	"{1:t}"
@@ -339,10 +343,21 @@
 	{
 		"en"		"The ball is pumped up, lets play."
 	}
-	//-----CURSE-----//
+	//-----CMD_CURSE-----//
 	"Toggled curse on target"
 	{
 		"#format"	"{1:t}"
 		"en"		"Toggled curse on {1}."
+	}
+	//-----CMD_GetModel-----//
+	"CMD_GetModel_Usage"
+	{
+		"en"		"[SM] Usage: sm_getmodel <target>"
+	}
+
+	"CMD_GetModel"
+	{
+		"#format"	"{1:t},{2:s}"
+		"en"		"{1} is using model:- {2}"
 	}
 }
