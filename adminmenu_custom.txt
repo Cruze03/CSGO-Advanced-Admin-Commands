@@ -695,10 +695,10 @@
 				"type"		"list"
 				"title"		"Now, or in the next round?"
 				
-				"1"			"0"
+				"1"			"1"
 				"1."		"Now"
 				
-				"2"			"1"
+				"2"			"0"
 				"2."		"Next round"
 			}
 		}
@@ -715,10 +715,10 @@
 				"type"		"list"
 				"title"		"Now, or in the next round?"
 				
-				"1"			"0"
+				"1"			"1"
 				"1."		"Now"
 				
-				"2"			"1"
+				"2"			"0"
 				"2."		"Next round"
 			}
 		}
@@ -731,10 +731,10 @@
 				"type"		"list"
 				"title"		"Now, or in the next round?"
 				
-				"1"			"0"
+				"1"			"1"
 				"1."		"Now"
 				
-				"2"			"1"
+				"2"			"0"
 				"2."		"Next round"
 			}
 		}
