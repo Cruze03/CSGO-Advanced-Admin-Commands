@@ -10,15 +10,15 @@
 public Plugin myinfo =
 {
 	name = "[CSGO] Advanced Admin",
-	author = "PeEzZ.[edit Cruze]", // Farbror Godis for curse command's code
+	author = "PeEzZ.[edit Cruze]",
 	description = "Advanced commands for admins.",
 	version = "2.1",
 	url = "https://forums.alliedmods.net/showthread.php?t=285493"
 };
 
 #define CMD_PREFIX		"[SM] " //Prefix in admin activity messages
-#define ROOT_PREFIX		"[R]" //Root admin's (ADMFLAG_ROOT) prefix in the !admins command, [R] is the default
-#define ADMIN_PREFIX	"" //Simple admin's (ADMFLAG_GENERIC) prefix in the !admins command, [A] is the old
+#define ROOT_PREFIX	"" 		//Root admin's (ADMFLAG_ROOT) prefix in the !admins command, [R] is the old. Leave blank for no prefix
+#define ADMIN_PREFIX	"" 		//Simple admin's (ADMFLAG_GENERIC) prefix in the !admins command, [A] is the old. Leave blank for no prefix
 
 #define MODEL_CHICKEN "models/chicken/chicken.mdl"
 #define MODEL_CHICKEN_ZOMBIE "models/chicken/chicken_zombie.mdl"
@@ -29,11 +29,13 @@ public Plugin myinfo =
 #define SOUND_BURY "physics/concrete/boulder_impact_hard4.wav" //Bury sound, leave blank to disable
 
 Handle CVAR_ADMINS = INVALID_HANDLE;
+Handle CVAR_SHOWROOTADMINS = INVALID_HANDLE;
 Handle CVAR_ANNOUNCE = INVALID_HANDLE;
 Handle CVAR_SILENTADMINTEAMJOIN = INVALID_HANDLE;
 Handle CVAR_INVALID = INVALID_HANDLE;
 Handle CVAR_LOG = INVALID_HANDLE;
-Handle CVAR_HealthRest;
+Handle CVAR_HealthRest = INVALID_HANDLE;
+Handle SpectatorsMax;
 
 float SaveVec[MAXPLAYERS + 1][2][3];
 
@@ -59,12 +61,13 @@ char ItemsList[][] = //VALID ITEM NAMES HERE, HEAVYASSAULTSUIT ONLY WORKS WHEN I
 
 public void OnPluginStart()
 {
-	CVAR_ADMINS					= 	CreateConVar("sm_advadmin_admins",		"2",			"Settings of !admins command, 0 - disable, 1 - show fake message, 2 - show online admins", _, true, 0.0, true, 2.0);
-	CVAR_ANNOUNCE					=	CreateConVar("sm_advadmin_announce",		"2",			"Join announce, 0 - disable, 1 - simple announce, 2 - announce with country name, 3 = no admin annouce", _, true, 0.0, true, 3.0);
-	CVAR_SILENTADMINTEAMJOIN		=	CreateConVar("sm_advadmin_noteamjoinmsg",	"1",			"No Team join message for admin, 0 = disable, 1 = enable", _, true, 0.0, true, 1.0);
-	CVAR_INVALID					= 	CreateConVar("sm_advadmin_invalid",		"1",			"Invalid given item will show for all players just for fun, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
-	CVAR_LOG						= 	CreateConVar("sm_advadmin_log",			"1",			"Enable logging for plugin, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
-	CVAR_HealthRest				=	CreateConVar("sm_advadmin_healthrest",	"1",			"Restrict health's value >= 0? (because Setting the health to 0 stops the player from any movement in CSGO) ", _, true, 0.0, true, 1.0);
+	CVAR_ADMINS					= 	CreateConVar("sm_advadmin_admins",				"1",			"Settings of !admins command, 0 - disable, 1 - show fake message, 2 - show online admins", _, true, 0.0, true, 2.0);
+	CVAR_SHOWROOTADMINS			= 	CreateConVar("sm_advadmin_showrootadmins",		"0",			"Show ROOT admins in !admins command?, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
+	CVAR_ANNOUNCE					=	CreateConVar("sm_advadmin_announce",				"2",			"Join announce, 0 - disable, 1 - simple announce, 2 - announce with country name, 3 = no admin annouce", _, true, 0.0, true, 3.0);
+	CVAR_SILENTADMINTEAMJOIN		=	CreateConVar("sm_advadmin_noteamjoinmsg",			"1",			"No Team join message for admin, 0 = disable, 1 = enable", _, true, 0.0, true, 1.0);
+	CVAR_INVALID					= 	CreateConVar("sm_advadmin_invalid",				"1",			"Invalid given item will show for all players just for fun, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
+	CVAR_LOG						= 	CreateConVar("sm_advadmin_log",					"1",			"Enable logging for plugin, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
+	CVAR_HealthRest				=	CreateConVar("sm_advadmin_healthrest",			"1",			"Restrict health's value >= 0? (because Setting the health to 0 stops the player from any movement in CSGO) ", _, true, 0.0, true, 1.0);
 	
 	//-----//
 	RegAdminCmd("sm_extend",		CMD_Extend,		ADMFLAG_CHANGEMAP,	"Extending the map");
@@ -100,7 +103,7 @@ public void OnPluginStart()
 	//-----//
 	RegAdminCmd("sm_hp",			CMD_Health,		ADMFLAG_KICK,		"Set the health for the targets");
 	RegAdminCmd("sm_health",		CMD_Health,		ADMFLAG_KICK,		"Set the health for the targets");
-	RegAdminCmd("sm_armor",		CMD_Armor,			ADMFLAG_KICK,		"Set the armor for the targetsr");
+	RegAdminCmd("sm_armor",		CMD_Armor,			ADMFLAG_KICK,		"Set the armor for the targets");
 	RegAdminCmd("sm_cash",			CMD_Cash,			ADMFLAG_BAN,		"Set the cash for the targets");
 	//-----//
 	RegAdminCmd("sm_setstats",		CMD_SetStats,		ADMFLAG_BAN,		"Set the stats for the targets");
@@ -109,12 +112,15 @@ public void OnPluginStart()
 	RegAdminCmd("sm_spawnchicken",	CMD_SpawnChicken,	ADMFLAG_GENERIC,	"Spawn one chicken on your aim position");
 	RegAdminCmd("sm_sc",			CMD_SpawnChicken,	ADMFLAG_GENERIC,	"Spawn one chicken on your aim position");
 	RegAdminCmd("sm_spawnball",	CMD_SpawnBall,	ADMFLAG_GENERIC,	"Spawn one ball on your aim position");
-	RegAdminCmd("sm_curse", 		CMD_CURSE, 		ADMFLAG_SLAY, 		"sm_curse <#userid|name> [0/1]");
+	RegAdminCmd("sm_curse", 		CMD_Curse, 		ADMFLAG_SLAY, 		"Inverts the movement of targets");
+	RegAdminCmd("sm_getmodel",		CMD_GetModel,		ADMFLAG_BAN,		"Get target's model name");
 	
 	RegConsoleCmd("sm_admins",	CMD_Admins,							"Showing the online admins");
 	
 	HookEvent("player_team", Event_PlayerTeam, EventHookMode_Pre);
 	HookEvent("player_death", Event_PlayerDeath);
+	
+	SpectatorsMax = FindConVar("mp_spectators_max");
 	
 	LoadTranslations("common.phrases");
 	LoadTranslations("advadmin.phrases");
@@ -164,7 +170,7 @@ public Action Event_PlayerTeam(Event event, const char[] name, bool dontBroadcas
         {
 			if(GetUserAdmin(z) != INVALID_ADMIN_ID)
 			{
-				event.SetBool("silent", true); //Thanks Ilusion9
+				event.SetBool("silent", true);
 			}
 		}
 	}
@@ -225,7 +231,7 @@ public Action CMD_Admins(int client, int args) //Showing all online admins for y
 		return Plugin_Handled;
 	}
 	
-	if(!(GetUserFlagBits(client) & ADMFLAG_GENERIC))
+	if (GetUserAdmin(client) != INVALID_ADMIN_ID)
 	{
 		int value = GetConVarInt(CVAR_ADMINS);
 		if(value == 0)
@@ -244,12 +250,12 @@ public Action CMD_Admins(int client, int args) //Showing all online admins for y
 	
 	for(int i = 1; i <= MaxClients; i++)
 	{
-		if(IsClientInGame(i))
+		if(IsClientInGame(i) && IsClientValid(i))
 		{
 			char flags = GetUserFlagBits(i);
 			if(flags & ADMFLAG_GENERIC)
 			{			
-				Format(current, sizeof(current), "%s%N", (flags & ADMFLAG_ROOT) ? ROOT_PREFIX : ADMIN_PREFIX, i);
+				Format(current, sizeof(current), "%s %N", ADMIN_PREFIX, i);
 				if(StrEqual(buffer, "", false))
 				{
 					Format(buffer, sizeof(buffer), "%s", current);
@@ -258,6 +264,22 @@ public Action CMD_Admins(int client, int args) //Showing all online admins for y
 				{
 					Format(buffer, sizeof(buffer), "%s, %s", buffer, current);
 				}
+			}
+			else if(flags & ADMFLAG_ROOT && GetConVarBool(CVAR_SHOWROOTADMINS))
+			{
+				Format(current, sizeof(current), "%s %N", ROOT_PREFIX, i);
+				if(StrEqual(buffer, "", false))
+				{
+					Format(buffer, sizeof(buffer), "%s", current);
+				}
+				else
+				{
+					Format(buffer, sizeof(buffer), "%s, %s", buffer, current);
+				}
+			}
+			else
+			{
+				//
 			}
 		}
 	}
@@ -700,15 +722,38 @@ public Action CMD_Team(int client, int args)
 					ChangeClientTeam(target_list[i], team);
 				}
 			}
+			else if(args == 2)
+			{
+				if(team != 1)
+				{
+					CS_SwitchTeam(target_list[i], team);
+					if(IsPlayerAlive(target_list[i]))
+					{
+						CS_RespawnPlayer(target_list[i]);
+					}
+				}
+				else
+				{
+					ChangeClientTeam(target_list[i], team);
+				}
+			}
 			else
 			{
-				SetEntProp(target_list[i], Prop_Data, "m_iPendingTeamNum", team);
-				int frags = GetClientFrags(target_list[i]) +1;
-				int deaths = GetClientDeaths(target_list[i])-1;
-				int score = CS_GetClientContributionScore(target_list[i])+2;
-				SetEntProp(target_list[i], Prop_Data, "m_iFrags", frags);
-				SetEntProp(target_list[i], Prop_Data, "m_iDeaths", deaths);
-				CS_SetClientContributionScore(target_list[i], score);
+				if(GetConVarInt(SpectatorsMax) <= 0)
+				{
+					ChangeClientTeam(target_list[i], team);
+					PrintToChat(client, "[SM] %t", "CMD_Team_Inst");
+				}
+				else
+				{
+					SetEntProp(target_list[i], Prop_Data, "m_iPendingTeamNum", team);
+					int frags = GetClientFrags(target_list[i]) +1;
+					int deaths = GetClientDeaths(target_list[i])-1;
+					int score = CS_GetClientContributionScore(target_list[i])+2;
+					SetEntProp(target_list[i], Prop_Data, "m_iFrags", frags);
+					SetEntProp(target_list[i], Prop_Data, "m_iDeaths", deaths);
+					CS_SetClientContributionScore(target_list[i], score);
+				}
 			}
 		}
 	}
@@ -756,6 +801,21 @@ public Action CMD_Swap(int client, int args)
 			if(team >= 2)
 			{
 				if(value == 1)
+				{
+					if(team == CS_TEAM_T)
+					{
+						CS_SwitchTeam(target_list[i], CS_TEAM_CT);
+					}
+					else
+					{
+						CS_SwitchTeam(target_list[i], CS_TEAM_T);
+					}
+					if(IsPlayerAlive(target_list[i]))
+					{
+						CS_RespawnPlayer(target_list[i]);
+					}
+				}
+				else if(args == 1)
 				{
 					if(team == CS_TEAM_T)
 					{
@@ -849,9 +909,27 @@ public Action CMD_Spec(int client, int args)
 			{
 				ChangeClientTeam(target_list[i], CS_TEAM_SPECTATOR);
 			}
+			else if(args == 1)
+			{
+				ChangeClientTeam(target_list[i], CS_TEAM_SPECTATOR);
+			}
 			else
 			{
-				SetEntProp(target_list[i], Prop_Data, "m_iPendingTeamNum", CS_TEAM_SPECTATOR);
+				if(GetConVarInt(SpectatorsMax) <= 0)
+				{
+					ChangeClientTeam(target_list[i], CS_TEAM_SPECTATOR);
+					PrintToChat(client, "[SM] %t", "CMD_Team_Inst");
+				}
+				else
+				{
+					SetEntProp(target_list[i], Prop_Data, "m_iPendingTeamNum", CS_TEAM_SPECTATOR);
+					int frags = GetClientFrags(target_list[i]) +1;
+					int deaths = GetClientDeaths(target_list[i])-1;
+					int score = CS_GetClientContributionScore(target_list[i])+2;
+					SetEntProp(target_list[i], Prop_Data, "m_iFrags", frags);
+					SetEntProp(target_list[i], Prop_Data, "m_iDeaths", deaths);
+					CS_SetClientContributionScore(target_list[i], score);
+				}
 			}
 		}
 	}
@@ -1784,7 +1862,7 @@ public Action CMD_SpawnBall(int client, int args)
 	LogActionEx(client, "%t", "CMD_SpawnBall");
 	return Plugin_Handled;
 }
-public Action CMD_CURSE(int client, int args) 
+public Action CMD_Curse(int client, int args) 
 {
 	if(!IsClientValid(client) || !IsClientInGame(client))
 	{
@@ -1829,6 +1907,45 @@ public Action CMD_CURSE(int client, int args)
 		ShowActivity2(client, CMD_PREFIX, "%t", "Toggled curse on target", "_s", target_name);
 	}
 
+	return Plugin_Handled;
+}
+public Action CMD_GetModel(int client, int args)
+{
+	if(!IsClientValid(client))
+	{
+		return Plugin_Handled;
+	}
+	if (args != 1)
+	{
+		ReplyToCommand(client,"%t", "CMD_GetModel_Usage");
+		return Plugin_Handled;
+	}
+	char target_name[MAX_TARGET_LENGTH], buffer[512];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
+	
+	GetCmdArg(1, buffer, sizeof(buffer));
+	
+	if((target_count = ProcessTargetString(buffer, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+	for (int i = 0; i < target_count; i++)
+	{
+		GetClientModel(target_list[i], buffer, sizeof(buffer));
+		GetClientName(target_list[i], target_name, sizeof(target_name));
+	}
+	if(tn_is_ml)
+	{
+		ShowActivity2(client, CMD_PREFIX, "%t", "CMD_GetModel", target_name, buffer);
+		LogActionEx(client, "%t", "CMD_GetModel", target_name, buffer);
+	}
+	else
+	{
+		ShowActivity2(client, CMD_PREFIX, "%t", "CMD_GetModel", "_s", target_name, buffer);
+		LogActionEx(client, "%t", "CMD_GetModel", "_s", target_name, buffer);
+	}
 	return Plugin_Handled;
 }
 
