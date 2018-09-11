@@ -1,12 +1,14 @@
 # CSGO-Advanced-Admin-Commands
-Original Author:- PeEzZ. Plan to modify it more!
+Original Author:- PeEzZ.
 
-People who are great:- Super Commands (pRED*), Super Admin (TechKnow), Adv Commands (xaider), and for original custom adminmenu list (Dungeon).
+**People who are great for these:- Super Commands (pRED*), Super Admin (TechKnow), Adv Commands (xaider), and for original custom adminmenu list (Dungeon), Silent Team join (Ilusion9),  Curse(Farbror Godis)** Forgot you? [Contact me [here](http://steamcommunity.com/profiles/76561198132924835)]
+
+**Reason I forked:- To fix small bugs and have plan to expand it more.**
 
 **Download:- [:clickmesenpai:](https://github.com/Cruze03/CSGO-Advanced-Admin-Commands/releases)**
 
 
-CHANGLELOG:-
+**CHANGLELOG:-**
 
 date format: month/date/year
 
@@ -24,7 +26,7 @@ date format: month/date/year
 * New CVAR: "sm_advadmin_healthres" which restrict keeping health's value >=0.
 * !god command is now toggle instead of bool to enable/disable
 
-TODO:-
+**TODO:-**
 * ~New Syntax~
 * Add more commands! [Doing whenever I have idea and time] 
 * Suggest [Contact me [here](http://steamcommunity.com/profiles/76561198132924835)]
