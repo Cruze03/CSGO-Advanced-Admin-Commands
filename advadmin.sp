@@ -62,7 +62,7 @@ char ItemsList[][] = //VALID ITEM NAMES HERE, HEAVYASSAULTSUIT ONLY WORKS WHEN I
 public void OnPluginStart()
 {
 	CVAR_ADMINS					= 	CreateConVar("sm_advadmin_admins",				"1",			"Settings of !admins command, 0 - disable, 1 - show fake message, 2 - show online admins", _, true, 0.0, true, 2.0);
-	CVAR_SHOWROOTADMINS			= 	CreateConVar("sm_advadmin_showrootadmins",		"0",			"Show ROOT admins in !admins command?, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
+	CVAR_SHOWROOTADMINS			= 	CreateConVar("sm_advadmin_showrootadmins",		"1",			"Show ROOT admins in !admins command?, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
 	CVAR_ANNOUNCE					=	CreateConVar("sm_advadmin_announce",				"2",			"Join announce, 0 - disable, 1 - simple announce, 2 - announce with country name, 3 = no admin annouce", _, true, 0.0, true, 3.0);
 	CVAR_SILENTADMINTEAMJOIN		=	CreateConVar("sm_advadmin_noteamjoinmsg",			"1",			"No Team join message for admin, 0 = disable, 1 = enable", _, true, 0.0, true, 1.0);
 	CVAR_INVALID					= 	CreateConVar("sm_advadmin_invalid",				"1",			"Invalid given item will show for all players just for fun, 0 - disable, 1 - enable", _, true, 0.0, true, 1.0);
