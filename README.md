@@ -1,7 +1,13 @@
 # CSGO-Advanced-Admin-Commands
 Original Author:- PeEzZ.
 
-## People who are great for these:- Super Commands (pRED*), Super Admin (TechKnow), Adv Commands (xaider), and for original custom adminmenu list (Dungeon), Silent Team join (Ilusion9),  Curse(Farbror Godis)
+## People who are great for these:- 
+* Super Commands (pRED*)
+* Super Admin (TechKnow) 
+* Adv Commands (xaider) 
+* for original custom adminmenu list (Dungeon) 
+* Silent Team join (Ilusion9)  
+* Curse(Farbror Godis)
 
 Forgot you? Contact me [here](http://steamcommunity.com/profiles/76561198132924835)
 
