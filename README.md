@@ -37,6 +37,7 @@ date format: month/date/year
 9/10/2018
 
 * New CVAR: "sm_advadmin_showrootadmins" bool's showing admins with "z".
+* Fixed !admins.
 * Fixed !team, !swap and !spec again!
 * New command !getmodel which prints target's model path.
 
