@@ -8,6 +8,7 @@ Original Author:- *PeEzZ*.
 * for original custom adminmenu list (Dungeon) 
 * Silent Team join (Ilusion9)  
 * Curse(Farbror Godis)
+* GetModel (3sigma/X@IDER)
 
 Forgot you in the above list? Contact me [here](http://steamcommunity.com/profiles/76561198132924835)
 
