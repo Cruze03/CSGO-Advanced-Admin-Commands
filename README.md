@@ -1,7 +1,7 @@
 # CSGO-Advanced-Admin-Commands
-Original Author:- PeEzZ.
+Original Author:- *PeEzZ*.
 
-## People who are great for these:- 
+## People who are great for following:- 
 * Super Commands (pRED*)
 * Super Admin (TechKnow) 
 * Adv Commands (xaider) 
@@ -9,11 +9,11 @@ Original Author:- PeEzZ.
 * Silent Team join (Ilusion9)  
 * Curse(Farbror Godis)
 
-Forgot you? Contact me [here](http://steamcommunity.com/profiles/76561198132924835)
+Forgot you in the above list? Contact me [here](http://steamcommunity.com/profiles/76561198132924835)
 
-**Reason I forked:- To fix small bugs and have plan to expand it more.**
+**Reason I forked:- To fix small bugs and have plans to expand it more.**
 
-**Download:- [:clickmesenpai:](https://github.com/Cruze03/CSGO-Advanced-Admin-Commands/releases)**
+**Download:- [Click Here](https://github.com/Cruze03/CSGO-Advanced-Admin-Commands/releases)**
 
 
 **CHANGLELOG:-**
