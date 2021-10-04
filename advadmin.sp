@@ -12,7 +12,7 @@ public Plugin myinfo =
 	name = "[CSGO] Advanced Admin",
 	author = "PeEzZ.[edit Cruze]",
 	description = "Advanced commands for admins.",
-	version = "2.1",
+	version = "2.2",
 	url = "https://forums.alliedmods.net/showthread.php?t=285493"
 };
 
