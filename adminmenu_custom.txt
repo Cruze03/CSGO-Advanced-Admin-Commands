@@ -71,7 +71,7 @@
 				"title"		"Weapon:"
 				
 				
-				//PISTOLS
+				//PISTOLES
 				"1"			"deagle"
 				"1."		"Desert Eagle"
 				
@@ -242,7 +242,7 @@
 				"title"		"Weapon:"
 				
 				
-				//PISTOLS
+				//PISTOLES
 				"1"			"deagle"
 				"1."		"Desert Eagle"
 				
@@ -397,6 +397,16 @@
 				"47."		"C4 Bomb"
 			}
 		}
+		"Melee Player"
+		{
+			"cmd"		"sm_equip #1"
+			
+			"1"
+			{
+				"type" 			"player"
+				"title"			"Player:"
+			}
+		}
 		"Disarm Player"
 		{
 			"cmd"		"sm_disarm #1"
@@ -451,22 +461,24 @@
 		
 		"Bury Player"
 		{
-			"cmd"		"sm_bury #1"
+			"cmd"		"sm_bury #1 #2"
 			
 			"1"
 			{
 				"type" 			"player"
 				"title"			"Player:"
 			}
-		}
-		"Unbury Player"
-		{
-			"cmd"		"sm_unbury #1"
 			
-			"1"
+			"2"
 			{
-				"type" 			"player"
-				"title"			"Player:"
+				"type" 		"list"
+				"title"		"Bury or unbury?"
+				
+				"1"			"0"
+				"1."		"Bury"
+				
+				"2"			"1"
+				"2."		"Unbury"
 			}
 		}
 		
@@ -503,13 +515,19 @@
 		}
 		"Set God"
 		{
-			"cmd"		"sm_god #1"
+			"cmd"		"sm_god #1 #2"
 			
 			"1"
 			{
 				"type" 		"player"
 				"method"	"name"
 				"title"		"Player:"
+			}
+			
+			"2"
+			{
+				"type"		"onoff"
+				"title"		"God Mode:"
 			}
 		}
 		"Set Armour"
@@ -695,10 +713,10 @@
 				"type"		"list"
 				"title"		"Now, or in the next round?"
 				
-				"1"			"1"
+				"1"			"0"
 				"1."		"Now"
 				
-				"2"			"0"
+				"2"			"1"
 				"2."		"Next round"
 			}
 		}
@@ -715,10 +733,10 @@
 				"type"		"list"
 				"title"		"Now, or in the next round?"
 				
-				"1"			"1"
+				"1"			"0"
 				"1."		"Now"
 				
-				"2"			"0"
+				"2"			"1"
 				"2."		"Next round"
 			}
 		}
@@ -731,10 +749,10 @@
 				"type"		"list"
 				"title"		"Now, or in the next round?"
 				
-				"1"			"1"
+				"1"			"0"
 				"1."		"Now"
 				
-				"2"			"0"
+				"2"			"1"
 				"2."		"Next round"
 			}
 		}
@@ -800,17 +818,6 @@
 		"Spawn Ball"
 		{
 			"cmd"		"sm_spawnball"
-		}
-		"Curse"
-		{
-			"cmd"		"sm_curse #1"
-			
-			"1"
-			{
-				"type" 		"player"
-				"method"	"name"
-				"title"		"Player:"
-			}
 		}
 	}
 }
