@@ -201,6 +201,17 @@
 		"en"		"{1} disarmed"
 	}
 	
+	//-----DROP-----//
+	"CMD_Drop_Usage"
+	{
+		"en"		"[SM] Usage: sm_drop <#userid|target> <weapon slot>"
+	}
+	"CMD_Drop"
+	{
+		"#format"	"{1:t}"
+		"en"		"{1} dropped weapon(s)"
+	}
+	
 	//-----RESPAWN-----//
 	"CMD_Respawn_Usage"
 	{
@@ -329,5 +340,27 @@
 	"CMD_SpawnBall"
 	{
 		"en"		"The ball is pumped up, lets play."
+	}
+	
+	//-----Curse-----//
+	"CMD_Curse_Usage"
+	{
+		"en"		"[SM] Usage: sm_curse <#userid|name>"
+	}
+	"CMD_Cursed"
+	{
+		"#format"	"{1:t}"
+		"en"		"Toggled curse on {1}."
+	}
+	
+	//-----Get Model-----//
+	"CMD_GetModel_Usage"
+	{
+		"en"		"[SM] Usage: sm_getmodel <#userid|name>"
+	}
+	"CMD_GetModel"
+	{
+		"#format"	"{1:t},{2:s}"
+		"en"		"{1} is using model:- {2}"
 	}
 }
